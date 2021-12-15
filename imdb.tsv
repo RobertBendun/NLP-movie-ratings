@@ -1,0 +1,4 @@
+file	name	type
+title.ratings	title-id	string
+title.ratings	average-rating	float
+title.ratings	votes	nat

@@ -1,0 +1,5 @@
+imdb-datasets
+query/query
+*.vw
+.ccls-cache
+compile_commands.json
