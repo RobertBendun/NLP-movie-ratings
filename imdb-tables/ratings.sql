@@ -1,0 +1,7 @@
+CREATE TABLE "Ratings" (
+	"Title"	TEXT NOT NULL UNIQUE,
+	"Rating"	REAL NOT NULL,
+	"Votes_Count"	INTEGER NOT NULL,
+	PRIMARY KEY("Title"),
+	FOREIGN KEY("Title") REFERENCES Basics(ID)
+);

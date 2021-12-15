@@ -1,5 +1,7 @@
 imdb-datasets
-query/query
+archive/query/query
 *.vw
 .ccls-cache
 compile_commands.json
+db-tool/db-tool
+imdb
