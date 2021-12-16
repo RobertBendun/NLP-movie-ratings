@@ -4,29 +4,29 @@ db-tool/db-tool: db-tool/*.go
 	cd db-tool; go build
 
 # Database creation
-imdb: imdb-data db-tool/db-tool imdb-tables/*.sql
-	rm -f imdb
-	sqlite3 imdb <(cat imdb-tables/*.sql)
-	db-tool/db-tool -db imdb -table Ratings -tsv imdb-datasets/title.ratings.tsv
-	db-tool/db-tool -db imdb -table Basics -tsv imdb-datasets/title.basics.tsv
+db: imdb-data db-tool/db-tool imdb-tables/*.sql
+	rm -f $@
+	sqlite3 $@ <(cat imdb-tables/*.sql)
+	db-tool/db-tool -db $@ -table Ratings -tsv imdb/data/title.ratings.tsv
+	db-tool/db-tool -db $@ -table Basics -tsv imdb/data/title.basics.tsv
 
 # IMDB DATA
 datasets=\
-    imdb-datasets/name.basics.tsv\
-    imdb-datasets/title.akas.tsv\
-    imdb-datasets/title.basics.tsv\
-    imdb-datasets/title.crew.tsv\
-    imdb-datasets/title.episode.tsv\
-    imdb-datasets/title.principals.tsv\
-    imdb-datasets/title.ratings.tsv
+    imdb/data/name.basics.tsv\
+    imdb/data/title.akas.tsv\
+    imdb/data/title.basics.tsv\
+    imdb/data/title.crew.tsv\
+    imdb/data/title.episode.tsv\
+    imdb/data/title.principals.tsv\
+    imdb/data/title.ratings.tsv
 
 .PHONY: imdb-data
 imdb-data: $(datasets)
 
-imdb-datasets/%.tsv: imdb-datasets/%.tsv.gz
+imdb/data/%.tsv: imdb/data/%.tsv.gz
 	gzip -d $<
 
-imdb-datasets/%.tsv.gz:
+imdb/data/%.tsv.gz:
 	wget 'https://datasets.imdbws.com/$(shell basename $@)' -O $@ -q
 
 .PHONY: clean
@@ -35,11 +35,11 @@ clean:
 
 .PHONY: clean-data
 clean-data:
-	rm -f imdb-datasets/*.tsv imdb-datasets/*.gz
+	rm -f imdb/data/*.tsv imdb/data/*.gz
 
 .PHONY: clean-db
 clean-db:
-	rm -f imdb
+	rm -f db
 
 .PHONY: clean-all
 clean-all: clean clean-data clean-db
