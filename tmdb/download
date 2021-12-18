@@ -1,0 +1,12 @@
+#!/bin/bash
+
+categories=(movie tv_series person collection tv_network keyword production_company)
+
+curr_date=$(date +"%m_%d_%Y")
+
+for category in ${categories[*]}; do
+	json="$category""_ids_$curr_date.json"
+	json_gz="$json.gz"
+	[ -e "$json_gz" -o -e "$json" ] || wget "https://files.tmdb.org/p/exports/$json_gz"
+	[ -e "$json" ] || gzip -d "$json_gz"
+done

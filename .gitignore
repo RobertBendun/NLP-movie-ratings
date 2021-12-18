@@ -5,3 +5,5 @@ archive/query/query
 compile_commands.json
 db-tool/db-tool
 db
+tmdb/*.json
+tmdb/*.gz
