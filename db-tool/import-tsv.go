@@ -11,9 +11,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type tsvImport struct {
+	database, table, tsv string
+}
 
-func importDatabase(database, table, tsv string) {
-	tsvData, err := os.Open(tsv)
+func (params tsvImport) execute() {
+	tsvData, err := os.Open(params.tsv)
 	ensure(err, "Opening file")
 
 	r := csv.NewReader(tsvData)
@@ -23,12 +26,14 @@ func importDatabase(database, table, tsv string) {
 	header, err := r.Read()
 	ensure(err, "Reading header")
 
-	db, err := sql.Open("sqlite3", database)
+	db, err := sql.Open("sqlite3", params.database)
 	ensure(err, "Opening SQLite database")
 	defer db.Close()
 
 	args := strings.Repeat("?,", len(header))
-	insertStatementText := fmt.Sprintf("insert into %s values (%s)", table, args[:len(args)-1])
+	insertStatementText := fmt.Sprintf(
+		"insert into %s values (%s)",
+		params.table, args[:len(args)-1])
 
 	tx, err := db.Begin()
 	ensure(err, "Start of transaction")
