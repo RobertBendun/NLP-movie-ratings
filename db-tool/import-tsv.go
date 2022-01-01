@@ -12,11 +12,13 @@ import (
 )
 
 type tsvImport struct {
-	database, table, tsv string
+	Database string `name:"db" help:"Path to database file"`
+	Table string `name:"table" help:"Table where data will be inserted"`
+	Tsv string `name:"tsv" help:"Path to TSV file that gonna be imported"`
 }
 
-func (params tsvImport) execute() {
-	tsvData, err := os.Open(params.tsv)
+func (params tsvImport) Execute() {
+	tsvData, err := os.Open(params.Tsv)
 	ensure(err, "Opening file")
 
 	r := csv.NewReader(tsvData)
@@ -26,14 +28,14 @@ func (params tsvImport) execute() {
 	header, err := r.Read()
 	ensure(err, "Reading header")
 
-	db, err := sql.Open("sqlite3", params.database)
+	db, err := sql.Open("sqlite3", params.Database)
 	ensure(err, "Opening SQLite database")
 	defer db.Close()
 
 	args := strings.Repeat("?,", len(header))
 	insertStatementText := fmt.Sprintf(
 		"insert into %s values (%s)",
-		params.table, args[:len(args)-1])
+		params.Table, args[:len(args)-1])
 
 	tx, err := db.Begin()
 	ensure(err, "Start of transaction")

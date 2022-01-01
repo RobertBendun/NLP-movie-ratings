@@ -32,7 +32,7 @@ func nonEmpty(val string, errMessage string) {
 }
 
 func unimplemented() {
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(1)
 	if ok {
 		fmt.Fprintf(os.Stderr, "%s:%d: error: unimplemented\n", file, line)
 	} else {
