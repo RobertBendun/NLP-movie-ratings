@@ -14,20 +14,20 @@ type SubCommand interface {
 }
 
 type subCmd struct {
-	sc SubCommand
-	fields []reflect.StructField
+	sc          SubCommand
+	fields      []reflect.StructField
 	names, help []string
-	flagSet *flag.FlagSet
-	subcmd string
+	flagSet     *flag.FlagSet
+	subcmd      string
 }
 
 func New(sc SubCommand, name string) (info subCmd) {
 	info.sc = sc
 
 	t := reflect.TypeOf(sc).Elem()
-	fieldNames := []string{ "name", "help" }
+	fieldNames := []string{"name", "help"}
 
-	fieldsLoop:
+fieldsLoop:
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
 		var fields [2]string

@@ -13,8 +13,8 @@ import (
 
 type tsvImport struct {
 	Database string `name:"db" help:"Path to database file"`
-	Table string `name:"table" help:"Table where data will be inserted"`
-	Tsv string `name:"tsv" help:"Path to TSV file that gonna be imported"`
+	Table    string `name:"table" help:"Table where data will be inserted"`
+	Tsv      string `name:"tsv" help:"Path to TSV file that gonna be imported"`
 }
 
 func (params tsvImport) Execute() {
