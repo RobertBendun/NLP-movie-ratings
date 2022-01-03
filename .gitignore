@@ -7,3 +7,9 @@ db-tool/db-tool
 db
 tmdb/*.json
 tmdb/*.gz
+metrics
+psplit
+raport.pdf
+*.txt
+*.train
+*.test

@@ -1,4 +1,4 @@
-all: imdb imdb-data db-tool/db-tool
+all: imdb imdb-data db-tool/db-tool raport.pdf
 
 db-tool/db-tool: db-tool/*.go
 	cd db-tool; go build
@@ -9,6 +9,11 @@ db: imdb-data db-tool/db-tool imdb-tables/*.sql
 	sqlite3 $@ <(cat imdb-tables/*.sql)
 	db-tool/db-tool -db $@ -table Ratings -tsv imdb/data/title.ratings.tsv
 	db-tool/db-tool -db $@ -table Basics -tsv imdb/data/title.basics.tsv
+
+# Raport
+
+%.pdf: %.md
+	pandoc -Tpdf -o $@ $<
 
 # IMDB DATA
 datasets=\

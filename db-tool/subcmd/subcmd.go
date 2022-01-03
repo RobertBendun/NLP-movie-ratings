@@ -68,6 +68,7 @@ func Run(subcmds ...subCmd) {
 			}
 
 			subcmd.sc.Execute()
+			return
 		}
 	}
 
