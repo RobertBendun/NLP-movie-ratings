@@ -58,6 +58,7 @@ func (params vwExport) Execute() {
 				}
 				line.WriteString(words)
 			case "nat":
+			case "float":
 				line.WriteString(data[i])
 			default:
 				fmt.Fprintf(os.Stderr, "Unrecognized column's type %s", typ.Name())
