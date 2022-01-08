@@ -2,7 +2,7 @@ ensure_bin=@mkdir -p bin
 
 all: imdb imdb-data \
 	raport.pdf \
-	bin/metrics bin/psplit bin/db-tool
+	bin/metrics bin/psplit bin/db-tool bin/flatten
 
 progs/db-tool/db-tool: progs/db-tool/*.go
 	cd $(@D); go build
