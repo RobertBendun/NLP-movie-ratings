@@ -3,7 +3,7 @@ archive/query/query
 *.vw
 .ccls-cache
 compile_commands.json
-db-tool/db-tool
+progs/db-tool/db-tool
 db
 tmdb/*.json
 tmdb/*.gz
@@ -13,3 +13,6 @@ raport.pdf
 *.txt
 *.train
 *.test
+bin/
+*.aux
+*.log
