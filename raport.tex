@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{polski}
+\usepackage{listings}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{statistics}
+
+\lstset{
+	tabsize=2,
+	basicstyle=\ttfamily,
+  columns=fullflexible,
+  keepspaces=true,
+	frame=tb,
+	%numbers=left
+}
+
+\begin{document}
+
+\section{Tytuły jako wyłączny wyznacznik oceny filmu}
+
+\lstinputlisting[language=SQL,caption=Kwerenda wyznaczająca tytuły filmów oraz ich oceny,label=titles-query]{./queries/titles.sql}
+
+\begin{lstlisting}[language=bash,caption=Przygotowanie danych dla modelu i ewaluacji,label=query1]
+bin/db-tool vw -db db -query queries/titles.sql -out titles.txt
+bin/pslit 3 titles.train.txt 1 titles.test.txt < titles.txt
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash,caption=Wielkości zbiorów]
+wc -l titles.{train,test}.txt
+  678826 titles.train.txt
+  225428 titles.test.txt
+  904254 total
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Generowanie modelu]
+vw -d titles.train.txt -f titles.vw
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Ewaluacja modelu]
+vw -d titles.test.txt -i titles.vw -p titles.predictions.txt
+\end{lstlisting}
+\end{document}
