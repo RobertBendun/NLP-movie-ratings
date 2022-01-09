@@ -8,8 +8,11 @@
 #include <iostream>
 #include <libgen.h>
 #include <tuple>
+#include <vector>
 
 #include <fmt/format.h>
+
+using namespace fmt::literals;
 
 using u64 = unsigned long long;
 
@@ -36,8 +39,60 @@ u64 false_positive[11] = {};
 u64 false_negative[11] = {};
 u64 count[11] = {};
 
+const std::array<std::pair<char const*, u64*>, 2> per_class_metrics = {{
+	{ "Precision", false_positive },
+	{ "Recall", false_negative }
+}};
+
+
 double div(double a, double b, double if_zero) {
 	return b == 0 ? if_zero : a / b;
+}
+
+void print_terminal()
+{
+	fmt::print("Accuracy: {:.2f}% (equal: {}, total: {})\n", 100.0 * positive / total, human(positive), human(total));
+
+	for (auto metric : per_class_metrics) {
+		fmt::print("{}:\n", metric.first);
+		double avg = 0;
+		for (unsigned i = 1; i <= 10; ++i) {
+			auto const v = div(true_positive[i], true_positive[i] + metric.second[i], 0);
+			fmt::print("  {}: {:.2f}% (equal: {}, total: {})\n", i, 100.0 * v, human(true_positive[i]), human(count[i]));
+			avg += v;
+		}
+		fmt::print("  Average: {:.2f}%\n", 100 * avg / 10);
+	}
+}
+
+void print_pgf_plot()
+{
+	unsigned avgs[per_class_metrics.size()];
+	std::vector<std::string> metrics[per_class_metrics.size()];
+
+	unsigned metric_id = 0;
+	for (auto metric : per_class_metrics) {
+		double avg = 0;
+		for (auto i = 1u; i <= 10u; ++i) {
+			auto const v = div(true_positive[i], true_positive[i] + metric.second[i], 0);
+			avg += v;
+			metrics[metric_id].push_back("({}, {:.0f})"_format(i, v * 100));
+		}
+		avgs[metric_id++] = 100 * avg / 10;
+	}
+
+	for (unsigned i = 0; i < per_class_metrics.size(); ++i) {
+		fmt::print(R"tex(\begin{{tikzpicture}}
+\begin{{axis}}[ybar, title={{FILLME}}, symbolic x coords={{1,2,3,4,5,6,7,8,9,10}},
+	legend pos = north west, axis y line=none, axis x line=bottom, nodes near coords,
+	enlarge x limits=0.1, extra x ticks={{1,2,3,4,5,6,7,8,9,10}}]
+\addplot+ coordinates {{ {} }};
+\legend{{ {} }};
+\addplot [black, dashed, line legend, sharp plot, update limits=false] coordinates {{ (1, {}) (10, {}) }};
+\end{{axis}}
+\end{{tikzpicture}}
+)tex", fmt::join(metrics[i], " "), per_class_metrics[i].first, avgs[i], avgs[i]);
+	}
 }
 
 // https://medium.com/apprentice-journal/evaluating-multi-class-classifiers-12b2946e755b
@@ -76,22 +131,8 @@ int main(int, char **argv)
 		}
 	}
 
-	fmt::print("Accuracy: {:.2f}% (equal: {}, total: {})\n", 100.0 * positive / total, human(positive), human(total));
-
-	const std::array<std::pair<char const*, u64*>, 2> per_class_metrics = {{
-		{ "Precision", false_positive },
-		{ "Recall", false_negative }
-	}};
-
-
-	for (auto metric : per_class_metrics) {
-		fmt::print("{}:\n", metric.first);
-		double avg = 0;
-		for (unsigned i = 1; i <= 10; ++i) {
-			auto const v = div(true_positive[i], true_positive[i] + metric.second[i], 0);
-			fmt::print("  {}: {:.2f}% (equal: {}, total: {})\n", i, 100.0 * v, human(true_positive[i]), human(count[i]));
-			avg += v;
-		}
-		fmt::print("  Average: {:.2f}%\n", 100 * avg / 10);
-	}
+	if (getenv("PLOT") != nullptr)
+		print_pgf_plot();
+	else
+		print_terminal();
 }
