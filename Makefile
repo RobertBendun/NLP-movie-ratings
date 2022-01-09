@@ -4,7 +4,7 @@ all: imdb imdb-data \
 	raport.pdf \
 	bin/metrics bin/psplit bin/db-tool bin/flatten
 
-progs/db-tool/db-tool: progs/db-tool/*.go
+progs/db-tool/db-tool: progs/db-tool/*.go progs/db-tool/**/*.go
 	cd $(@D); go build
 
 bin/db-tool: progs/db-tool/db-tool
