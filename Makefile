@@ -19,8 +19,8 @@ bin/%: progs/%.cc
 db: imdb-data bin/db-tool imdb-tables/*.sql
 	rm -f $@
 	sqlite3 $@ <(cat imdb-tables/*.sql)
-	bin/db-tool -db $@ -table Ratings -tsv imdb/data/title.ratings.tsv
-	bin/db-tool -db $@ -table Basics -tsv imdb/data/title.basics.tsv
+	bin/db-tool import -db $@ -table Ratings -tsv imdb/data/title.ratings.tsv
+	bin/db-tool import -db $@ -table Basics -tsv imdb/data/title.basics.tsv
 
 # Raport
 

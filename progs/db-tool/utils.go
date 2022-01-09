@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -39,4 +40,19 @@ func unimplemented() {
 		fmt.Fprintln(os.Stderr, "unimplemented at unknown location")
 	}
 	os.Exit(1)
+}
+
+func readFile(file string, message string) string {
+	bytes, err := ioutil.ReadFile(file)
+	ensure(err, message)
+	return string(bytes)
+}
+
+func newStringInterfaceArray(count int) (data []string, interfaces []interface{}) {
+	data = make([]string, count)
+	interfaces = make([]interface{}, count)
+	for i := range data {
+		interfaces[i] = &data[i]
+	}
+	return
 }

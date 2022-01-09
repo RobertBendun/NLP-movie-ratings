@@ -10,6 +10,34 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+func queryResultToVWString(types []*sql.ColumnType, data []string) string {
+	line := strings.Builder{}
+	for i, typ := range types {
+		switch typ.Name() {
+		case "str":
+			words := strings.TrimSpace(bagOfWords(data[i]))
+			if len(words) == 0 {
+				return ""
+			}
+			line.WriteString(words)
+		case "nat":
+		case "float":
+			line.WriteString(data[i])
+		default:
+			fmt.Fprintf(os.Stderr, "Unrecognized column's type %s", typ.Name())
+			os.Exit(1)
+		}
+
+		if i == 0 {
+			line.WriteString(" | ")
+		} else {
+			line.WriteString(" ")
+		}
+	}
+
+	return line.String()
+}
+
 type vwExport struct {
 	Database   string `name:"db" help:"Path to database file"`
 	Query      string `name:"query" help:"File with SELECT statement"`
@@ -30,12 +58,7 @@ func (params vwExport) Execute() {
 	types, err := rows.ColumnTypes()
 	ensure(err, "Retriving column types")
 
-	data := make([]string, len(types))
-	interfaces := make([]interface{}, len(types))
-	for i := range data {
-		interfaces[i] = &data[i]
-	}
-
+	data, interfaces := newStringInterfaceArray(len(types))
 	var out *os.File
 	if params.OutputPath == "-" {
 		out = os.Stdout
@@ -45,33 +68,10 @@ func (params vwExport) Execute() {
 		defer out.Close()
 	}
 
-	rowsLoop: for rows.Next() {
+	for rows.Next() {
 		ensure(rows.Scan(interfaces...), "Scanning next row")
-
-		line := strings.Builder{}
-		for i, typ := range types {
-			switch typ.Name() {
-			case "str":
-				words := strings.TrimSpace(bagOfWords(data[i]))
-				if len(words) == 0 {
-					continue rowsLoop
-				}
-				line.WriteString(words)
-			case "nat":
-			case "float":
-				line.WriteString(data[i])
-			default:
-				fmt.Fprintf(os.Stderr, "Unrecognized column's type %s", typ.Name())
-				os.Exit(1)
-			}
-
-			if i == 0 {
-				line.WriteString(" | ")
-			} else {
-				line.WriteString(" ")
-			}
+		if line := queryResultToVWString(types, data); len(line) > 0 {
+			fmt.Fprintln(out, line)
 		}
-
-		fmt.Fprintln(out, line.String())
 	}
 }
