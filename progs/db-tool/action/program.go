@@ -2,10 +2,10 @@ package action
 
 type Program []Action
 
-func (prog Program) Group() (int, Action) {
+func (prog Program) Group() (int, *GroupAction) {
 	for i, action := range prog {
-		if _, ok := action.(GroupAction); ok {
-			return i, action
+		if v, ok := action.(*GroupAction); ok {
+			return i, v
 		}
 	}
 	return -1, nil

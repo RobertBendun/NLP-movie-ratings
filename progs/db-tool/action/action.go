@@ -3,20 +3,26 @@ package action
 import (
 	"fmt"
 	"strings"
-	"unicode"
 )
 
 type (
 	Action interface {
 		fmt.Stringer
+	}
+
+	SimpleAction interface {
+		Action
 		run(cell string) string
+	}
+
+	AggregateAction interface {
+		Action
+		keyRun(key, value string)
+		yield(key string) string
 	}
 
 	// Pass value without any transformation
 	IdAction struct {}
-
-	// Group
-	GroupAction struct{}
 
 	// Transforms string using bag of words method
 	BagOfWordsAction struct {}
@@ -24,60 +30,40 @@ type (
 	// When agregating yields first given value as result
 	HeadAction struct {
 		Action Action
+		called map[string]string
+	}
+
+	// Group
+	GroupAction struct {
+		Keys map[string]struct{}
 	}
 
 	// When agregating yields concatenation of given values with Delim delimiter
 	JoinAction struct {
 		Action Action
 		Delim string
+		joined map[string]*strings.Builder
 	}
 )
 
 func Run(action Action, cell string) string {
-	return strings.TrimSpace(action.run(cell))
-}
-
-func (IdAction) run(cell string) string {
-	return cell
-}
-
-func (BagOfWordsAction) run(text string) string {
-	bag := strings.Builder{}
-	word := strings.Builder{}
-
-	for _, char := range text {
-		if char == '\'' {
-			continue
-		}
-
-		if unicode.IsLetter(char) || unicode.IsDigit(char) {
-			word.WriteRune(unicode.ToLower(char))
-			continue
-		}
-
-		if word.Len() > 0 {
-			bag.WriteRune(' ')
-			bag.WriteString(word.String())
-			word = strings.Builder{}
-		}
+	if v, ok := action.(SimpleAction); ok {
+		return strings.TrimSpace(v.run(cell))
 	}
+	panic(fmt.Sprint("Group action called in non-group context: ", action))
+}
 
-	if word.Len() > 0 {
-		bag.WriteRune(' ')
-		bag.WriteString(word.String())
+func KeyRun(action Action, key, value string) {
+	if v, ok := action.(AggregateAction); ok {
+		v.keyRun(key, value)
+		return
 	}
-
-	return bag.String()
+	panic(fmt.Sprint("Non-group action called in group context: ", action))
 }
 
-func (HeadAction) run(string) string {
-	panic("head.run unimplemented")
-}
-
-func (GroupAction) run(string) string {
-	panic("group.run unimplemented")
-}
-
-func (JoinAction) run(string) string {
-	panic("join.run unimplemented")
+func Yield(action Action, key string) string {
+	if v, ok := action.(AggregateAction); ok {
+		return v.yield(key)
+	}
+	panic("Non-group action called in group context")
 }

@@ -51,34 +51,67 @@ func (params vwExport) Execute() {
 
 	start := time.Now()
 	count := 0
-	for rows.Next() {
-		ensure(rows.Scan(itfs...), "Row scanning")
-		count++
-		fmt.Fprintln(out, run(actions, data))
+
+	groupIndex, group := actions.Group()
+
+	if groupIndex < 0 {
+		nextScan:
+		for rows.Next() {
+			count++
+			ensure(rows.Scan(itfs...), "Row scanning")
+
+			line := strings.Builder{}
+			for i, act := range actions {
+				result := strings.TrimSpace(action.Run(act, data[i]))
+				if len(result) == 0 {
+					continue nextScan
+				}
+				line.WriteString(result)
+				if i == 0 {
+					line.WriteString(" | ")
+				} else {
+					line.WriteString(" ")
+				}
+			}
+			final := line.String()
+			if len(final) > 0 {
+				fmt.Fprintln(out, final)
+			}
+		}
+	} else {
+		for rows.Next() {
+			count++
+			ensure(rows.Scan(itfs...), "Group row scanning")
+			key := data[groupIndex]
+			group.Keys[key] = struct{}{}
+			for i, act := range actions {
+				if i == groupIndex {
+					continue
+				}
+				action.KeyRun(act, key, data[i])
+			}
+		}
+
+		for key := range group.Keys {
+			line := strings.Builder{}
+			for i, act := range actions {
+				if i == groupIndex {
+					continue
+				}
+				result := strings.TrimSpace(action.Yield(act, key))
+				if len(result) > 0 {
+					line.WriteString(result)
+					if i == 0 {
+						line.WriteString(" | ")
+					} else {
+						line.WriteString(" ")
+					}
+				}
+			}
+
+			fmt.Fprintln(out, line.String())
+		}
 	}
 
 	fmt.Printf("Processed %d rows in %v\n", count, time.Since(start))
-}
-
-func run(program action.Program, data []string) string {
-	groupIndex, _ := program.Group()
-	if groupIndex < 0 {
-		line := strings.Builder{}
-
-		for i, act := range program {
-			result := strings.TrimSpace(action.Run(act, data[i]))
-			if len(result) == 0 {
-				return ""
-			}
-			line.WriteString(result)
-			if i == 0 {
-				line.WriteString(" | ")
-			} else {
-				line.WriteString(" ")
-			}
-		}
-		return line.String()
-	}
-
-	panic("unimplemented: queries with groups")
 }

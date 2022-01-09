@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 )
 
 
@@ -21,9 +22,9 @@ func from(expr ast.Expr) (Action, error) {
 	switch v := expr.(type) {
 	case *ast.Ident:
 		switch v.Name {
-		case "bag": return BagOfWordsAction{}, nil
-		case "id": return IdAction{}, nil
-		case "group": return GroupAction{}, nil
+		case "bag": return &BagOfWordsAction{}, nil
+		case "id": return &IdAction{}, nil
+		case "group": return &GroupAction{ Keys: make(map[string]struct{}) }, nil
 		}
 
 	case *ast.CallExpr:
@@ -40,7 +41,10 @@ func from(expr ast.Expr) (Action, error) {
 					return nil, err
 				}
 				if action, err := expectAction(v.Args[0]); err == nil {
-					return HeadAction { Action: action }, nil
+					return &HeadAction {
+						Action: action,
+						called: make(map[string]string),
+					}, nil
 				} else {
 					return nil, err
 				}
@@ -56,7 +60,11 @@ func from(expr ast.Expr) (Action, error) {
 				if err != nil {
 					return nil, fmt.Errorf("arg 1 of join: %v", err)
 				}
-				return JoinAction{ Delim: delim, Action: action}, nil
+				return &JoinAction{
+					Delim: delim,
+					Action: action,
+					joined: make(map[string]*strings.Builder),
+				}, nil
 			}
 		} else {
 			return nil, fmt.Errorf("Expected identifier, got %v", v.Fun)
