@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-
 func From(code string) (Action, error) {
 	expr, err := parser.ParseExpr(code)
 	if err != nil {
@@ -22,9 +21,12 @@ func from(expr ast.Expr) (Action, error) {
 	switch v := expr.(type) {
 	case *ast.Ident:
 		switch v.Name {
-		case "bag": return &BagOfWordsAction{}, nil
-		case "id": return &IdAction{}, nil
-		case "group": return &GroupAction{ Keys: make(map[string]struct{}) }, nil
+		case "bag":
+			return &BagOfWordsAction{}, nil
+		case "id":
+			return &IdAction{}, nil
+		case "group":
+			return &GroupAction{Keys: make(map[string]struct{})}, nil
 		}
 
 	case *ast.CallExpr:
@@ -41,7 +43,7 @@ func from(expr ast.Expr) (Action, error) {
 					return nil, err
 				}
 				if action, err := expectAction(v.Args[0]); err == nil {
-					return &HeadAction {
+					return &HeadAction{
 						Action: action,
 						called: make(map[string]string),
 					}, nil
@@ -61,7 +63,7 @@ func from(expr ast.Expr) (Action, error) {
 					return nil, fmt.Errorf("arg 1 of join: %v", err)
 				}
 				return &JoinAction{
-					Delim: delim,
+					Delim:  delim,
 					Action: action,
 					joined: make(map[string]*strings.Builder),
 				}, nil
@@ -90,7 +92,7 @@ func expectString(expr ast.Expr) (string, error) {
 	if !ok || str.Kind != token.STRING {
 		return "", errors.New("Expected string literal")
 	}
-	return str.Value[1:len(str.Value)-1], nil
+	return str.Value[1 : len(str.Value)-1], nil
 }
 
 func expectAction(expr ast.Expr) (Action, error) {

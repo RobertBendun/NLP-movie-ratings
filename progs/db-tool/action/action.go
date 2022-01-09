@@ -22,10 +22,10 @@ type (
 	}
 
 	// Pass value without any transformation
-	IdAction struct {}
+	IdAction struct{}
 
 	// Transforms string using bag of words method
-	BagOfWordsAction struct {}
+	BagOfWordsAction struct{}
 
 	// When agregating yields first given value as result
 	HeadAction struct {
@@ -41,7 +41,7 @@ type (
 	// When agregating yields concatenation of given values with Delim delimiter
 	JoinAction struct {
 		Action Action
-		Delim string
+		Delim  string
 		joined map[string]*strings.Builder
 	}
 )

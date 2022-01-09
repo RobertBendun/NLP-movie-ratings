@@ -13,7 +13,7 @@ import (
 
 type vwExport struct {
 	Database   string `name:"db" help:"Path to database file"`
-	Query  string `name:"query" help:"File with SELECT statement"`
+	Query      string `name:"query" help:"File with SELECT statement"`
 	OutputPath string `name:"out" help:"Output file path"`
 }
 
@@ -55,7 +55,7 @@ func (params vwExport) Execute() {
 	groupIndex, group := actions.Group()
 
 	if groupIndex < 0 {
-		nextScan:
+	nextScan:
 		for rows.Next() {
 			count++
 			ensure(rows.Scan(itfs...), "Row scanning")
