@@ -33,12 +33,17 @@ func from(expr ast.Expr) (Action, error) {
 	case *ast.CallExpr:
 		if ident, ok := v.Fun.(*ast.Ident); ok {
 			switch ident.Name {
-			case "bag":
-				if err := expectArguments(v, "bag", 1); err != nil {
+			case "prefix":
+				if err := expectArguments(v, "prefix", 1); err != nil {
 					return nil, err
 				}
-				return BagOfWordsAction{}, nil
-
+				if prefix, err := expectString(v.Args[0]); err == nil {
+					return &PrefixAction{
+						prefix: prefix,
+					}, nil
+				} else {
+					return nil, err
+				}
 			case "head":
 				if err := expectArguments(v, "head", 1); err != nil {
 					return nil, err

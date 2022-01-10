@@ -55,6 +55,8 @@
 
 Oparta jest o zbiór programów stworzonych na rzecz tego projektu oraz narzędzi \href{https://www.gnu.org/software/coreutils/}{GNU Coreutils}. Konstrukcja programów, skryptów itp. ma na celu stworzenie środowiska pozwalającego na pracę w duchu \href{https://en.wikipedia.org/wiki/Unix_philosophy}{filozofii Unixa}.
 
+Równie ważnym celem poza reakcją samego projektu było (zainspirowane interfejsem terminalowym Vowpala Wabbita) stworzenie fremeworku do prostego tworzenia, operowania oraz łączenia zbiorów danych o podobnej tematyce.
+
 \subsubsection{Programy}
 
 \begin{itemize}
@@ -96,7 +98,7 @@ IMDB udostępnia gotowe zbiory danych (będące podzbiorem ogólnych informacji 
 
 Działania w tej sekcji miały na celu wyznaczyć minimalny poziom akceptowalnych predykcji. Jakiekolwiek bardziej złożone konstrukcje nie powinny dawać gorszych wyników niż działania podjęte w ramach tej sekcji.
 
-\subsection{Tytuły jako wyłączny wyznacznik oceny}
+\subsection{Tytuły jako wyłączny wyznacznik oceny} \label{titlesresults}
 
 Wyjątkowym dla tej sekcji, jest wprost pokazany sposób konstrukcji zbiorów, danych oraz wyników i ich reprezentacji przy pomocy narzędzi omówionych w sekcji {\ref{metodyka}. W pozostałych z uwagi na silne podobieństwo działań pominę zawarcie szczegółowego opisu procesu.
 
@@ -200,5 +202,47 @@ Gdy w predykcji na podstawie tytułów, tylko 1 rekord był przewidziany perfekc
 \end{center}
 
 \includeplots{cast-limited-gender}
+
+\section{Złożone kwerendy predykcyjne}
+
+\subsection{Tytuły oraz liczba głosów}
+
+\sql{Kwerenda łącząca tytuł oraz liczbę głosów wraz z ocenami}{./queries/titles-votes.sql}
+
+\subsubsection{Rezultaty}
+
+Porównanie wraz z wynikami predykcji przy pomocy tytułów z sekcji \ref{titlesresults}.
+
+
+\begin{center}
+\begin{tabular}{ |c|c|c| }
+\hline  & Bez liczby głosów & Wraz z liczbą głosów \\
+	\hline	Średni błąd kwadratowy & \( 1.836 \) & \( 1.803 \) \\
+	\hline	Najmniejszy błąd & \( 0 \) & \( 0 \)\\
+	\hline	Największy błąd & \( 7.488 \) & \( 7.573 \) \\
+	\hline	Średni błąd & \( 1.037 \) & \( 1.024 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{figure*}[htp]
+\centering
+	\subfigure[Histogram błędu bez liczby głosów]{
+		\includegraphics[scale=0.45]{titles.hist.png}
+	}
+	\subfigure[Hisogram błędu wraz z liczbą głosów]{
+		\includegraphics[scale=0.45]{titles-votes.hist.png}
+	}
+\end{figure*}
+
+\begin{figure*}[htp]
+\centering
+	\subfigure[Porównanie bez liczby głosów]{
+		\includegraphics[scale=0.40]{titles.scatter.png}
+	}
+	\subfigure[Porównanie wraz z liczbą głosów]{
+		\includegraphics[scale=0.40]{titles-votes.scatter.png}
+	}
+\end{figure*}
 
 \end{document}

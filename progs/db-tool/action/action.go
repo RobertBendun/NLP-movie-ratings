@@ -27,6 +27,11 @@ type (
 	// Transforms string using bag of words method
 	BagOfWordsAction struct{}
 
+	// Prefix each value with prefix
+	PrefixAction struct {
+		prefix string
+	}
+
 	// When agregating yields first given value as result
 	HeadAction struct {
 		Action Action

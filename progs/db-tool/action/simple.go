@@ -3,10 +3,15 @@ package action
 import (
 	"strings"
 	"unicode"
+	"fmt"
 )
 
 func (IdAction) run(cell string) string {
 	return cell
+}
+
+func (p PrefixAction) run(cell string) string {
+	return fmt.Sprintf("%s%s", p.prefix, cell)
 }
 
 func (BagOfWordsAction) run(text string) string {

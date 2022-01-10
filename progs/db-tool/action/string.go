@@ -14,6 +14,10 @@ func (BagOfWordsAction) String() string {
 	return "bag"
 }
 
+func (p PrefixAction) String() string {
+	return fmt.Sprintf("prefix\"%s\"", p.prefix)
+}
+
 func (head HeadAction) String() string {
 	return "head: " + head.Action.String()
 }
