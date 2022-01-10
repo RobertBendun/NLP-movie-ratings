@@ -14,90 +14,10 @@
 
 using namespace fmt::literals;
 
-using u64 = unsigned long long;
-
-std::string human(u64 v)
-{
-	char buf[std::numeric_limits<u64>::digits10] = {};
-	auto res = std::to_chars(buf, sizeof(buf) + buf, v);
-	assert(res.ptr != buf);
-	auto const len = res.ptr - buf;
-
-	std::string result;
-	result.resize(len * 4 / 3 - (len % 3 == 0), ' ');
-	for (unsigned i = 0; i < len; ++i) {
-		result[result.size() - i - 1 - i/3] = buf[len - i - 1];
-	}
-	return result;
-}
-
-unsigned positive = 0, total = 0;
-
-// Index [1,10]
-u64 true_positive[11] = {};
-u64 false_positive[11] = {};
-u64 false_negative[11] = {};
-u64 count[11] = {};
-
-const std::array<std::pair<char const*, u64*>, 2> per_class_metrics = {{
-	{ "Precision", false_positive },
-	{ "Recall", false_negative }
-}};
-
-
-double div(double a, double b, double if_zero) {
-	return b == 0 ? if_zero : a / b;
-}
-
-void print_terminal()
-{
-	fmt::print("Accuracy: {:.2f}% (equal: {}, total: {})\n", 100.0 * positive / total, human(positive), human(total));
-
-	for (auto metric : per_class_metrics) {
-		fmt::print("{}:\n", metric.first);
-		double avg = 0;
-		for (unsigned i = 1; i <= 10; ++i) {
-			auto const v = div(true_positive[i], true_positive[i] + metric.second[i], 0);
-			fmt::print("  {}: {:.2f}% (equal: {}, total: {})\n", i, 100.0 * v, human(true_positive[i]), human(count[i]));
-			avg += v;
-		}
-		fmt::print("  Average: {:.2f}%\n", 100 * avg / 10);
-	}
-}
-
-void print_pgf_plot()
-{
-	unsigned avgs[per_class_metrics.size()];
-	std::vector<std::string> metrics[per_class_metrics.size()];
-
-	unsigned metric_id = 0;
-	for (auto metric : per_class_metrics) {
-		double avg = 0;
-		for (auto i = 1u; i <= 10u; ++i) {
-			auto const v = div(true_positive[i], true_positive[i] + metric.second[i], 0);
-			avg += v;
-			metrics[metric_id].push_back("({}, {:.0f})"_format(i, v * 100));
-		}
-		avgs[metric_id++] = 100 * avg / 10;
-	}
-
-	for (unsigned i = 0; i < per_class_metrics.size(); ++i) {
-		fmt::print(R"tex(\begin{{tikzpicture}}
-\begin{{axis}}[ybar, title={{FILLME}}, symbolic x coords={{1,2,3,4,5,6,7,8,9,10}},
-	legend pos = north west, axis y line=none, axis x line=bottom, nodes near coords,
-	enlarge x limits=0.1, extra x ticks={{1,2,3,4,5,6,7,8,9,10}}]
-\addplot+ coordinates {{ {} }};
-\legend{{ {} }};
-\addplot [black, dashed, line legend, sharp plot, update limits=false] coordinates {{ (1, {}) (10, {}) }};
-\end{{axis}}
-\end{{tikzpicture}}
-)tex", fmt::join(metrics[i], " "), per_class_metrics[i].first, avgs[i], avgs[i]);
-	}
-}
-
-// https://medium.com/apprentice-journal/evaluating-multi-class-classifiers-12b2946e755b
 int main(int, char **argv)
 {
+	bool print_equal = getenv("EQUAL");
+
 	char const* expected = *++argv;
 	char const* received = *++argv;
 	if (!expected || !received) {
@@ -109,30 +29,31 @@ int main(int, char **argv)
 	if (!exp_file)  { std::cerr << "Cannot open file: " << expected << std::endl; std::exit(1); }
 	if (!recv_file) { std::cerr << "Cannot open file: " << received << std::endl; std::exit(1); }
 
+	double mse = 0, min_diff = 10, max_diff = 0, avg_diff = 0;
+	unsigned count = 0;
+
 	for (std::string exp_line, recv_line;
 		std::getline(exp_file, exp_line) && std::getline(recv_file, recv_line);
 	) {
-		unsigned exp;
-		float recv_f;
-		unsigned recv;
-
+		double exp, recv;
 		std::from_chars(exp_line.data(), exp_line.data() + exp_line.size(), exp);
-		std::from_chars(recv_line.data(), recv_line.size() + recv_line.data(), recv_f);
-		recv = std::round(recv_f);
+		std::from_chars(recv_line.data(), recv_line.size() + recv_line.data(), recv);
+		auto diff = std::abs(exp - recv);
 
-		++total;
-		++count[exp];
-		if (exp == recv) {
-			++positive;
-			true_positive[exp]++;
-		} else {
-			false_positive[recv]++;
-			false_negative[exp]++;
-		}
+		if (print_equal && diff <= std::numeric_limits<double>::epsilon())
+			fmt::print("Equal:\nExpected: {}\nReceived: {}\n", exp_line, recv_line);
+
+		mse += diff * diff;
+		min_diff = std::min(min_diff, diff);
+		max_diff = std::max(max_diff, diff);
+		avg_diff += diff;
+		++count;
 	}
 
-	if (getenv("PLOT") != nullptr)
-		print_pgf_plot();
-	else
-		print_terminal();
+	fmt::print("MSE: {}\n", mse / count);
+	fmt::print(R"(Difference
+  Min: {}
+  Max: {}
+  Avg: {}
+)", min_diff, max_diff, avg_diff / count);
 }

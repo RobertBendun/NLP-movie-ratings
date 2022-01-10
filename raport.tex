@@ -2,6 +2,12 @@
 \usepackage{polski}
 \usepackage{listings}
 \usepackage{pgfplots}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage[margin=4cm]{geometry}
+
+\graphicspath{ {./images/} }
+
 \pgfplotsset{compat=1.18}
 \usepgfplotslibrary{statistics}
 
@@ -14,9 +20,68 @@
 	%numbers=left
 }
 
+\title{Predykcja ocen filmów oraz seriali\\ \large Projekt w ramach laboratoriów Przetwarzania Języka Naturalnego}
+\author{Robert Bendun}
+\date{2022-01-10}
+
 \begin{document}
 
-\section{Tytuły jako wyłączny wyznacznik oceny filmu}
+\maketitle
+
+\tableofcontents
+
+\pagebreak
+
+\section{Informacje ogólne}
+
+\subsection{Metodyka pracy} \label{metodyka}
+
+Oparta jest o zbiór programów stworzonych na rzecz tego projektu oraz narzędzi \href{https://www.gnu.org/software/coreutils/}{GNU Coreutils}. Konstrukcja programów, skryptów itp. ma na celu stworzenie środowiska pozwalającego na pracę w duchu \href{https://en.wikipedia.org/wiki/Unix_philosophy}{filozofii Unixa}.
+
+\subsubsection{Programy}
+
+\begin{itemize}
+\item \textbf{bin/db-tool} Narzędzie umożliwiające interakcję ze zbiorem danych przechowywanym w bazie SQL.
+	\begin{itemize}
+		\item \textbf{bin/db-tool import} Importuje dane TSV do tabeli wewnątrz bazy danych SQL
+		\item \textbf{bin/db-tool vw} Generuje plik Vovpal Wabbit wg kwerendy używającej rozszerzonego SQL
+	\end{itemize}
+\item \textbf{bin/metrics} - Generuje wyniki ewaluacji modelu na podstawie zbioru predykcji oraz testowego
+\item \textbf{bin/psplit} - Dzieli proporcjonalnie i losowo wg wag zbiór danych
+\item \textbf{progs/error-hist.py} - Generuje histogram błędu pomiędzy zbiorem testowym a predykcjami
+\end{itemize}
+
+\subsubsection{Rozszerzenie języka SQL}
+
+Pozwala opisywać zbiory danych przy pomocy pojedyńczych kwerend SQL. Rozszerza przy pomocy \href{https://pkg.go.dev/go}{parsera języka Go}, poprzez mechanizm nazw kolumn. Lista dostępnych komend zdefiniowana jest w progs/db-tool/action/action.go. Jest używana do precyzyjniejszego opisu zbiorów używanych w danych predykcjach.
+
+\subsection{Zbiór danych}
+
+\subsubsection{Dane z serwisu IMDB}
+
+IMDB udostępnia gotowe zbiory danych (będące podzbiorem ogólnych informacji w serwisie), dostępne do pobrania w formie skompresowanych plików TSV. Wykorzystuję je bezpośrednio jako źródła tabel, na których operuję poniżej.
+
+\begin{center}
+\begin{tabular}{ |c|c| p{0.6\linewidth} | }
+	\hline
+	\textbf{Nazwa tabeli} & \textbf{Plik źródłowy} & \textbf{Opis zawartości} \\ \hline
+	Basics & title.basics.tsv.gz & Podstawowe informacje na temat pozycji w katalogu IMDB, takie jak nazwa filmu, rok produkcji, długość czy gatunek \\ \hline
+	Episodes & title.episode.tsv.gz & Wiąże seriale wraz z ich epizodami \\ \hline
+	Names & name.basics.tsv.gz & Imię, nazwisko, data urodzenia (opcjonalnie róœnież śmierci) osoby występującej w tabeli Principals \\ \hline
+	Principals & title.principals.tsv.gz & Główna obsada oraz osoby zaangażowane w produkcję danego dzieła \\ \hline
+	Ratings & title.ratings.tsv.gz & Ocena filmu oraz liczba kont głosujących \\ \hline
+\end{tabular}
+\end{center}
+
+\pagebreak
+
+\section{Predykcje oparte o pojedyńczy zbiór wartości}
+
+Działania w tej sekcji miały na celu wyznaczyć minimalny poziom akceptowalnych predykcji. Jakiekolwiek bardziej złożone konstrukcje nie powinny dawać gorszych wyników niż działania podjęte w ramach tej sekcji.
+
+\subsection{Tytuły jako wyłączny wyznacznik oceny}
+
+Wyjątkowym dla tej sekcji, jest wprost pokazany sposób konstrukcji zbiorów, danych oraz wyników i ich reprezentacji przy pomocy narzędzi omówionych w sekcji {\ref{metodyka}. W pozostałych z uwagi na silne podobieństwo działań pominę zawarcie szczegółowego opisu procesu.
 
 \lstinputlisting[language=SQL,caption=Kwerenda wyznaczająca tytuły filmów oraz ich oceny,label=titles-query]{./queries/titles.sql}
 
@@ -38,5 +103,57 @@ vw -d titles.train.txt -f titles.vw
 
 \begin{lstlisting}[language=bash, caption=Ewaluacja modelu]
 vw -d titles.test.txt -i titles.vw -p titles.predictions.txt
+bin/metrics titles.{test,predictions}.txt
 \end{lstlisting}
+
+\subsubsection{Rezultaty}
+
+\begin{center}
+\begin{tabular}{ |c|c| }
+\hline	Średni błąd kwadratowy & \( 1.836 \) \\
+\hline	Najmniejszy błąd & \( 0 \) \\
+\hline	Największy błąd & \( 7.488 \) \\
+\hline	Średni błąd & \( 1.037 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+Najmniejszy błąd o wartości \( 0 \) jest jedynym takim przypadkiem i wynika on prawdopodobnie z unikalności słów składającyh się na tytuł \emph{"The End/Floresta Negra - Parte 1 e Ferrovia no Nether/Portal do Fim - Parte 2"}. Film ten jest około 20 minutowym nagraniem gry w Minecrafta w serwisie YouTube. Najbardziej unikalnymi słowami w ramach tytułu są \emph{Ferrovia} - 1, \emph{Floresta} - 4, \emph{Fim} - 16, \emph{Negra} - 23. (Średnio słowo z tytułu występuje 6.548 razy, najwięcej 46320 razy).
+
+\begin{center}
+\begin{figure}[h]
+\caption{Histogram błędu pomiędzy zbiorem testowym, a odpowiadającymi mu predykcjami}
+\includegraphics[scale=0.9]{titles.png}
+\end{figure}
+\end{center}
+
+\pagebreak
+
+\subsection{Obsada, reżyserzy, kompozytorzy jako wyznacznik oceny}
+
+Predykcja na podstawie osób kreatywne widniejące w serwisie IMDB jako biorące udział w produkcji filmu. Dana osoba jest widziana przez unikalne ID ją jednoznacznie określające. Usuwa to problem powtarzających się imion i nazwisk.
+
+\lstinputlisting[language=SQL,caption=Kwerenda wyznaczająca osoby kreatywne dla danego filmu,label=titles-query]{./queries/cast.sql}
+
+\subsubsection{Rezultaty}
+
+\begin{center}
+\begin{tabular}{ |c|c| }
+\hline	Średni błąd kwadratowy & \( 1.272 \) \\
+\hline	Najmniejszy błąd & \( 0 \) \\
+\hline	Największy błąd & \( 7.310 \) \\
+\hline	Średni błąd & \( 0.82 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+Gdy w predykcji na podstawie tytułów, tylko 1 rekord był przewidziany perfekcyjnie, dla obsady występuje to aż 113 razy (\(0.04\%\)), dla samych ocen 10/10 z wyłączeniem jednej oceny 8.2. Wynika to prawdopodobnie ponownie z unikalności osób tworzących dane dzieło w kontekście zbioru danych.
+
+\begin{center}
+\begin{figure}[h]
+\caption{Histogram błędu pomiędzy zbiorem testowym, a odpowiadającymi mu predykcjami}
+\includegraphics[scale=0.9]{cast.png}
+\end{figure}
+\end{center}
+
 \end{document}

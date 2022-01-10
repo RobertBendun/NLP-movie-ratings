@@ -16,3 +16,5 @@ raport.pdf
 bin/
 *.aux
 *.log
+*.toc
+*.out

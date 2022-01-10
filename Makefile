@@ -26,6 +26,7 @@ db: imdb-data bin/db-tool imdb-tables/*.sql
 
 %.pdf: %.tex
 	pdflatex $<
+	pdflatex $<
 
 # IMDB DATA
 datasets=\
