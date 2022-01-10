@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import matplotlib.pyplot as plt, sys, os.path, seaborn as sns
+import matplotlib.pyplot as plt, sys, os.path, seaborn as sns, numpy as np
 
 def error(*args, end='\n'):
     sys.stderr.write(''.join(args) + end)
@@ -14,7 +14,6 @@ if len(sys.argv) != 3:
             else "[ERROR] Two filenames are required")
     usage()
 
-
 def get_prediction(lines : list[str]) -> list[float]:
     return [float(row[0])
         for row in map(lambda x: x.split(' '), lines)
@@ -22,7 +21,13 @@ def get_prediction(lines : list[str]) -> list[float]:
 
 with open(sys.argv[1]) as exp, open(sys.argv[2]) as recv:
     expected, received = get_prediction(exp.readlines()), get_prediction(recv.readlines())
-    data = [abs(e - r) for e, r in zip(expected, received)]
 
     base, _ = os.path.splitext(sys.argv[1])
-    sns.displot(data).savefig(base + '.png')
+    based, _ = os.path.splitext(base)
+
+    scatter = sns.scatterplot(x=expected, y=received)
+    scatter.set_xlabel("Dane testowe")
+    scatter.set_ylabel("Predykcje")
+    scatter.get_figure().savefig(based + '.hist.png')
+
+    sns.displot([abs(e - r) for e, r in zip(expected, received)]).savefig(based + '.scatter.png')

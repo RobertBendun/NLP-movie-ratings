@@ -4,6 +4,7 @@
 \usepackage{pgfplots}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{subfigure}
 \usepackage[margin=4cm]{geometry}
 
 \graphicspath{ {./images/} }
@@ -18,6 +19,18 @@
   keepspaces=true,
 	frame=tb,
 	%numbers=left
+}
+
+\newcommand{\includeplots}[1]{
+\begin{figure*}[htp]
+\centering
+	\subfigure[Histogram błędu pomiędzy zbiorem testowym, a odpowiadającymi mu predykcjami]{
+		\includegraphics[scale=0.45]{#1.hist.png}
+	}
+	\subfigure[Porównanie predykcji wartości ocen z wartościami testowymi]{
+		\includegraphics[scale=0.45]{#1.scatter.png}
+	}
+\end{figure*}
 }
 
 \title{Predykcja ocen filmów oraz seriali\\ \large Projekt w ramach laboratoriów Przetwarzania Języka Naturalnego}
@@ -120,12 +133,7 @@ bin/metrics titles.{test,predictions}.txt
 
 Najmniejszy błąd o wartości \( 0 \) jest jedynym takim przypadkiem i wynika on prawdopodobnie z unikalności słów składającyh się na tytuł \emph{"The End/Floresta Negra - Parte 1 e Ferrovia no Nether/Portal do Fim - Parte 2"}. Film ten jest około 20 minutowym nagraniem gry w Minecrafta w serwisie YouTube. Najbardziej unikalnymi słowami w ramach tytułu są \emph{Ferrovia} - 1, \emph{Floresta} - 4, \emph{Fim} - 16, \emph{Negra} - 23. (Średnio słowo z tytułu występuje 6.548 razy, najwięcej 46320 razy).
 
-\begin{center}
-\begin{figure}[h]
-\caption{Histogram błędu pomiędzy zbiorem testowym, a odpowiadającymi mu predykcjami}
-\includegraphics[scale=0.9]{titles.png}
-\end{figure}
-\end{center}
+\includeplots{titles}
 
 \pagebreak
 
@@ -149,11 +157,6 @@ Predykcja na podstawie osób kreatywne widniejące w serwisie IMDB jako biorące
 
 Gdy w predykcji na podstawie tytułów, tylko 1 rekord był przewidziany perfekcyjnie, dla obsady występuje to aż 113 razy (\(0.04\%\)), dla samych ocen 10/10 z wyłączeniem jednej oceny 8.2. Wynika to prawdopodobnie ponownie z unikalności osób tworzących dane dzieło w kontekście zbioru danych.
 
-\begin{center}
-\begin{figure}[h]
-\caption{Histogram błędu pomiędzy zbiorem testowym, a odpowiadającymi mu predykcjami}
-\includegraphics[scale=0.9]{cast.png}
-\end{figure}
-\end{center}
+\includeplots{cast}
 
 \end{document}
