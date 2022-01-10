@@ -92,8 +92,6 @@ IMDB udostępnia gotowe zbiory danych (będące podzbiorem ogólnych informacji 
 \end{tabular}
 \end{center}
 
-\pagebreak
-
 \section{Predykcje oparte o proste podzbiory wartości}
 
 Działania w tej sekcji miały na celu wyznaczyć minimalny poziom akceptowalnych predykcji. Jakiekolwiek bardziej złożone konstrukcje nie powinny dawać gorszych wyników niż działania podjęte w ramach tej sekcji.
@@ -140,8 +138,6 @@ bin/metrics titles.{test,predictions}.txt
 Najmniejszy błąd o wartości \( 0 \) jest jedynym takim przypadkiem i wynika on prawdopodobnie z unikalności słów składającyh się na tytuł \emph{"The End/Floresta Negra - Parte 1 e Ferrovia no Nether/Portal do Fim - Parte 2"}. Film ten jest około 20 minutowym nagraniem gry w Minecrafta w serwisie YouTube. Najbardziej unikalnymi słowami w ramach tytułu są \emph{Ferrovia} - 1, \emph{Floresta} - 4, \emph{Fim} - 16, \emph{Negra} - 23. (Średnio słowo z tytułu występuje 6.548 razy, najwięcej 46320 razy).
 
 \includeplots{titles}
-
-\pagebreak
 
 \subsection{Obsada, reżyserzy, kompozytorzy jako wyznacznik oceny}
 
@@ -244,5 +240,42 @@ Porównanie wraz z wynikami predykcji przy pomocy tytułów z sekcji \ref{titles
 		\includegraphics[scale=0.40]{titles-votes.scatter.png}
 	}
 \end{figure*}
+
+\subsection{Gatunek oraz rok produkcji}
+
+\sql{Łączenie oceny wraz z odpowiadającymi dziełu gatunkami oraz rokiem}{./queries/genres-year.sql}
+
+\subsubsection{Rezultaty}
+
+\begin{center}
+\begin{tabular}{ |c|c| }
+\hline	Średni błąd kwadratowy & \( 1.7144 \) \\
+\hline	Najmniejszy błąd & \( 0.7 \times 10^{-5} \) \\
+\hline	Największy błąd & \( 6.75 \) \\
+\hline	Średni błąd & \( 0.994 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+\includeplots{genres-year}
+
+\section{Wnioski}
+
+Głównym problemem niektórych z obranych metod może być dość niska zawartość informacji przenoszona przez wybrane dane do pradykcji (może tak być w przypadku np tytułu filmu). Koniecznym rozwinięciem projektu byłoby poszerzenie go o dalsze dane z serwisów jak TheMovieDB czy OMDB, które są kompatybilne z metodą indeksowania stosowaną w IMDB.
+
+\subsection{Tabela zbiorcza rezultatów}
+
+\begin{center}
+	\begin{tabular}{ |p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|  }
+\hline Kwerenda & Średni błąd kwadratowy & Najmniejszy błąd & Największy błąd & Średni błąd \\
+	\hline Tytuły filmów & \( 1.836 \) & \( 0 \) & \( 7.488 \) & \( 1.037 \) \\
+	\hline Obsada & \( 1.272 \) & \( 0 \) & \( 7.310 \) & \( 0.82 \) \\
+	\hline 3 głównych członków obsady & 1.375 & 0 & 6.882 & 0.8608 \\
+	\hline 3 główni członkowie obsady i płeć & 1.353 & 0 & 7.788 & 0.853 \\
+	\hline Tytuły i głosy & 1.803 & 0 & 7.573 & 1.024 \\
+	\hline Gatunek oraz rok & 1.7144 & \( 0.7 \times 10^{-5} \) & 6.75 & 0.994 \\
+	\hline
+\end{tabular}
+\end{center}
 
 \end{document}
