@@ -1,6 +1,9 @@
 package action
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 func (h *HeadAction) keyRun(key, value string) {
 	if _, ok := h.called[key]; !ok {
@@ -21,10 +24,50 @@ func (j *JoinAction) keyRun(key, value string) {
 		v = &strings.Builder{}
 		j.joined[key] = v
 	}
-	if v.Len() != 0 {
-		v.WriteString(j.Delim)
+	if result := Run(j.Action, value); len(result) > 0 {
+		if v.Len() != 0 {
+			v.WriteString(j.Delim)
+		}
+		v.WriteString(result)
 	}
-	v.WriteString(Run(j.Action, value))
+}
+
+func (j *LimitedJoinAction) keyRun(key, value string) {
+	if j.counts[key] > j.limit {
+		return
+	}
+	v, ok := j.joined[key]
+	if !ok {
+		v = &strings.Builder{}
+		j.joined[key] = v
+	}
+
+	if result := Run(j.Action, value); len(result) > 0 {
+		if v.Len() != 0 {
+			v.WriteString(j.Delim)
+		}
+		v.WriteString(result)
+		j.counts[key]++
+	}
+}
+
+func (j *LimitedCountedJoinAction) keyRun(key, value string) {
+	if j.counts[key] > j.limit {
+		return
+	}
+
+	v, ok := j.joined[key]
+	if !ok {
+		v = &strings.Builder{}
+		j.joined[key] = v
+	}
+	if result := Run(j.Action, value); len(result) > 0 {
+		if v.Len() != 0 {
+			v.WriteString(j.Delim)
+		}
+		v.WriteString(fmt.Sprintf("%s-%d", result, j.counts[key]))
+		j.counts[key]++
+	}
 }
 
 func (j JoinAction) yield(key string) string {

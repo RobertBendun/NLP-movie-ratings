@@ -33,6 +33,10 @@
 \end{figure*}
 }
 
+\newcommand{\sql}[2]{
+\lstinputlisting[language=SQL,caption=#1]{#2}
+}
+
 \title{Predykcja ocen filmów oraz seriali\\ \large Projekt w ramach laboratoriów Przetwarzania Języka Naturalnego}
 \author{Robert Bendun}
 \date{2022-01-10}
@@ -88,7 +92,7 @@ IMDB udostępnia gotowe zbiory danych (będące podzbiorem ogólnych informacji 
 
 \pagebreak
 
-\section{Predykcje oparte o pojedyńczy zbiór wartości}
+\section{Predykcje oparte o proste podzbiory wartości}
 
 Działania w tej sekcji miały na celu wyznaczyć minimalny poziom akceptowalnych predykcji. Jakiekolwiek bardziej złożone konstrukcje nie powinny dawać gorszych wyników niż działania podjęte w ramach tej sekcji.
 
@@ -96,7 +100,7 @@ Działania w tej sekcji miały na celu wyznaczyć minimalny poziom akceptowalnyc
 
 Wyjątkowym dla tej sekcji, jest wprost pokazany sposób konstrukcji zbiorów, danych oraz wyników i ich reprezentacji przy pomocy narzędzi omówionych w sekcji {\ref{metodyka}. W pozostałych z uwagi na silne podobieństwo działań pominę zawarcie szczegółowego opisu procesu.
 
-\lstinputlisting[language=SQL,caption=Kwerenda wyznaczająca tytuły filmów oraz ich oceny,label=titles-query]{./queries/titles.sql}
+\sql{Kwerenda wyznaczająca tytuły filmów oraz ich oceny}{./queries/titles.sql}
 
 \begin{lstlisting}[language=bash,caption=Przygotowanie danych dla modelu i ewaluacji,label=query1]
 bin/db-tool vw -db db -query queries/titles.sql -out titles.txt
@@ -141,7 +145,7 @@ Najmniejszy błąd o wartości \( 0 \) jest jedynym takim przypadkiem i wynika o
 
 Predykcja na podstawie osób kreatywne widniejące w serwisie IMDB jako biorące udział w produkcji filmu. Dana osoba jest widziana przez unikalne ID ją jednoznacznie określające. Usuwa to problem powtarzających się imion i nazwisk.
 
-\lstinputlisting[language=SQL,caption=Kwerenda wyznaczająca osoby kreatywne dla danego filmu,label=titles-query]{./queries/cast.sql}
+\sql{Kwerenda wyznaczająca osoby kreatywne dla danego filmu}{./queries/cast.sql}
 
 \subsubsection{Rezultaty}
 
@@ -158,5 +162,43 @@ Predykcja na podstawie osób kreatywne widniejące w serwisie IMDB jako biorące
 Gdy w predykcji na podstawie tytułów, tylko 1 rekord był przewidziany perfekcyjnie, dla obsady występuje to aż 113 razy (\(0.04\%\)), dla samych ocen 10/10 z wyłączeniem jednej oceny 8.2. Wynika to prawdopodobnie ponownie z unikalności osób tworzących dane dzieło w kontekście zbioru danych.
 
 \includeplots{cast}
+
+\section{Predykcje oparte o ograniczone podzbiory wartości}
+
+\subsection{3 główni członkowie obsady wyznacznikiem oceny}
+
+\sql{Kwerenda wyznaczająca 3 głównych członków obsady oraz powiązane z dziełem oceny}{./queries/cast-limited.sql}
+
+\subsubsection{Rezultaty}
+
+\begin{center}
+\begin{tabular}{ |c|c| }
+\hline	Średni błąd kwadratowy & \( 1.375 \) \\
+\hline	Najmniejszy błąd & \( 0 \) \\
+\hline	Największy błąd & \( 6.882 \) \\
+\hline	Średni błąd & \( 0.8608 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+\includeplots{cast-limited}
+
+\subsection{3 główni członkowie obsady wraz z płcią wyznacznikiem oceny}
+
+\sql{Kwerenda wyznaczająca 3 głównych członków obsady\, ich płeć oraz powiązane z dziełem oceny}{./queries/cast-limited-gender.sql}
+
+\subsubsection{Rezultaty}
+
+\begin{center}
+\begin{tabular}{ |c|c| }
+\hline	Średni błąd kwadratowy & \( 1.353 \) \\
+\hline	Najmniejszy błąd & \( 0 \) \\
+\hline	Największy błąd & \( 6.788 \) \\
+\hline	Średni błąd & \( 0.853 \) \\
+\hline
+\end{tabular}
+\end{center}
+
+\includeplots{cast-limited-gender}
 
 \end{document}

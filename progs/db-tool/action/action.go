@@ -44,6 +44,17 @@ type (
 		Delim  string
 		joined map[string]*strings.Builder
 	}
+
+	LimitedJoinAction struct {
+		JoinAction
+		counts map[string]int
+		limit int
+	}
+
+	// When agregating yields concatenation of given values with Delim delimiter and count
+	LimitedCountedJoinAction struct {
+		LimitedJoinAction
+	}
 )
 
 func Run(action Action, cell string) string {

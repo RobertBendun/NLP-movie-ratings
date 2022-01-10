@@ -24,7 +24,7 @@ db: imdb-data bin/db-tool imdb-tables/*.sql
 
 # Raport
 
-%.pdf: %.tex
+%.pdf: %.tex images/*
 	pdflatex $<
 	pdflatex $<
 

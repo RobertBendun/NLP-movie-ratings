@@ -22,3 +22,6 @@ vw -d "$Train" -f "$Model"
 
 echo "!!! Evaluating"
 vw -d "$Test" -i "$Model" -p "$Predictions"
+
+echo "!!! Generating plots"
+progs/plot-error.py "$Test" "$Predictions"

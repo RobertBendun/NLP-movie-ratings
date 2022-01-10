@@ -28,6 +28,6 @@ with open(sys.argv[1]) as exp, open(sys.argv[2]) as recv:
     scatter = sns.scatterplot(x=expected, y=received)
     scatter.set_xlabel("Dane testowe")
     scatter.set_ylabel("Predykcje")
-    scatter.get_figure().savefig(based + '.hist.png')
+    scatter.get_figure().savefig(based + '.scatter.png')
 
-    sns.displot([abs(e - r) for e, r in zip(expected, received)]).savefig(based + '.scatter.png')
+    sns.displot([abs(e - r) for e, r in zip(expected, received)]).savefig(based + '.hist.png')

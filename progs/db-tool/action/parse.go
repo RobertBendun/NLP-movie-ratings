@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strconv"
 	"strings"
 )
 
@@ -67,6 +68,60 @@ func from(expr ast.Expr) (Action, error) {
 					Action: action,
 					joined: make(map[string]*strings.Builder),
 				}, nil
+			case "limitedJoin":
+				if err := expectArguments(v, "limitedJoin", 3); err != nil {
+					return nil, err
+				}
+				delim, err := expectString(v.Args[0])
+				if err != nil {
+					return nil, fmt.Errorf("arg 0 of limitedJoin: %v", err)
+				}
+				action, err := expectAction(v.Args[1])
+				if err != nil {
+					return nil, fmt.Errorf("arg 1 of limitedJoin: %v", err)
+				}
+				limit, err := expectInt(v.Args[2])
+				if err != nil {
+					return nil, fmt.Errorf("arg 2 of limitedJoin: %v", err)
+				}
+
+				return &LimitedJoinAction{
+					JoinAction: JoinAction{
+						Delim:  delim,
+						Action: action,
+						joined: make(map[string]*strings.Builder),
+					},
+					counts: make(map[string]int),
+					limit: limit,
+				}, nil
+			case "limitedCountedJoin":
+				if err := expectArguments(v, "limitedCountedJoin", 3); err != nil {
+					return nil, err
+				}
+				delim, err := expectString(v.Args[0])
+				if err != nil {
+					return nil, fmt.Errorf("arg 0 of limitedCountedJoin: %v", err)
+				}
+				action, err := expectAction(v.Args[1])
+				if err != nil {
+					return nil, fmt.Errorf("arg 1 of limitedCountedJoin: %v", err)
+				}
+				limit, err := expectInt(v.Args[2])
+				if err != nil {
+					return nil, fmt.Errorf("arg 2 of limitedCountedJoin: %v", err)
+				}
+
+				return &LimitedCountedJoinAction{
+					LimitedJoinAction: LimitedJoinAction{
+						JoinAction: JoinAction{
+							Delim:  delim,
+							Action: action,
+							joined: make(map[string]*strings.Builder),
+						},
+						counts: make(map[string]int),
+						limit: limit,
+					},
+				}, nil
 			}
 		} else {
 			return nil, fmt.Errorf("Expected identifier, got %v", v.Fun)
@@ -93,6 +148,14 @@ func expectString(expr ast.Expr) (string, error) {
 		return "", errors.New("Expected string literal")
 	}
 	return str.Value[1 : len(str.Value)-1], nil
+}
+
+func expectInt(expr ast.Expr) (int, error) {
+	str, ok := expr.(*ast.BasicLit)
+	if !ok || str.Kind != token.INT {
+		return 0, errors.New("Expected int literal")
+	}
+	return strconv.Atoi(str.Value)
 }
 
 func expectAction(expr ast.Expr) (Action, error) {
